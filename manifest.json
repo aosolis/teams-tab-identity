@@ -1,0 +1,35 @@
+{
+	"$schema": "https://statics.teams.microsoft.com/sdk/v1.0/manifest/MicrosoftTeams.schema.json",
+	"manifestVersion": "1.0",
+	"version": "1.0",
+	"id": "f8aa5a15-a868-47b9-8586-ba5467286ce6",
+	"packageName": "io.github.aosolis.tab-idtoken",
+	"developer": {
+		"name": "Tab Authentication Sample",
+        "websiteUrl": "https://bing.com",
+        "privacyUrl": "https://privacy.microsoft.com/PrivacyStatement",
+        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement/"
+	},
+	"name": {
+        "short": "Tab Authentication Sample"
+    },
+	"description": {
+		"short": "Tab authentication sample",
+		"full": "Tab authentication sample"
+	},
+	"icons": {
+		"outline": "logo_app_20x20.png",
+		"color": "logo_app_96x96.png"
+	},
+	"accentColor": "#16233A",
+	"staticTabs": [
+		{
+			"contentUrl": "https://aosolis.github.io/tab-idtoken/content.html?upn={upn}",
+			"entityId": "content",
+			"name": "Content",
+			"scopes": ["personal"]
+		}
+	],
+	"permissions": ["identity", "messageTeamMembers"],
+	"validDomains": ["aosolis.github.io", "*.ngrok.io"]
+}

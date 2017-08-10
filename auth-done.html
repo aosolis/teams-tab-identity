@@ -1,0 +1,27 @@
+<html>
+<head>
+    <title>Authentication</title>
+</head>
+<body>
+    <script src="https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js"></script>
+    <script src="adal.js"></script>
+    <script src="auth-config.js"></script>
+    <script type="text/javascript">
+          microsoftTeams.initialize();
+
+          let authContext = new AuthenticationContext(config);
+
+          if (authContext.isCallback(window.location.hash)) {
+              console.log("In login callback");
+              authContext.handleWindowCallback(window.location.hash);
+              if (authContext.getCachedUser()) {
+                  console.log("Authentication succeeded");
+                  microsoftTeams.authentication.notifySuccess();
+              } else {
+                  console.log("Authentication failed");
+                  microsoftTeams.authentication.notifyFailure(authContext._getItem(authContext.CONSTANTS.STORAGE.ERROR));
+              }
+          }
+    </script>
+</body>
+</html>

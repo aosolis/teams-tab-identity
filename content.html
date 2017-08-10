@@ -1,0 +1,112 @@
+<html>
+<head>
+    <title>Content</title>
+</head>
+<body>
+    <div id="contentDiv">Loading...</div>
+    <button id="loginButton" onClick="login()" style="display: none">Login</button>
+    <button onClick="clearCache()">Clear cache</button>
+
+    <script src="https://code.jquery.com/jquery-3.1.1.js"></script>
+    <script src="https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js"></script>
+    <script src="adal.js"></script>
+    <script src="auth-config.js"></script>
+    <script type="text/javascript">
+          microsoftTeams.initialize();
+          //let config = window.adalConfig;
+
+          // Parse query parameters
+          let queryParams = {};
+          location.search.substr(1).split("&").forEach(function(item) {
+              let s = item.split("="),
+              k = s[0],
+              v = s[1] && decodeURIComponent(s[1]);
+              queryParams[k] = v;
+          });
+
+          let upn = queryParams["upn"];
+          if (upn) {
+              config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(upn);
+          } else {
+              config.extraQueryParameters = "scope=openid+profile";              
+          }
+
+          let authContext = new AuthenticationContext(config);
+
+          // See if we have a user already cached
+          let user = authContext.getCachedUser();
+          if (user) {
+              console.log("ADAL has cached user: " + user.userName);
+              if (user.userName !== upn) {
+                  console.log("ADAL cached user doesn't match expected upn");
+                  authContext.clearCache();
+              }
+          }
+
+          // Get the the id token (which is the access token for resource = clientId)
+          let token = authContext.getCachedToken(config.clientId);
+          if (token) {
+              useToken(token);
+          } else {
+              // No token, or token is expired
+              console.log("Refreshing id token");
+              authContext._renewIdToken(function (err, token) {
+                  if (err) {
+                      // Attempt to launch the login popup. On browsers this could potentially be blocked by
+                      // a popup blocker, in which case the login attempt will fail with an reason FailedToOpenWindow.
+                      // This is handled in the failureCallback below.
+                      // You could choose to stop and show a login button here instead.
+                      console.error("Error getting id token, attempting to automatically show the login window");
+                      login();
+                  } else {
+                      useToken(token);
+                  }
+              });
+          }
+
+          function login() {
+              $("#contentDiv").text("Launching authentication popup...");
+              microsoftTeams.authentication.authenticate({
+                  url: "https://aosolis.github.io/tab-idtoken/auth-start.html?upn=" + encodeURIComponent(queryParams["upn"]),
+                  successCallback: function (result) {
+                      console.log("Login succeeded: " + result);
+                      let token = authContext.getCachedToken(config.clientId);
+                      if (token) {
+                          useToken(token);
+                      } else {
+                          console.error("Error getting cached id token. This should never happen.");
+                          // At this point we have to get the user involved, so show the login button
+                          showLoginButton(true, "GetCachedToken failed")
+                      };
+                  },
+                  failureCallback: function (reason) {
+                      console.log("Login failed: " + reason);
+                      if (reason === "CancelledByUser" || reason === "FailedToOpenWindow") {
+                          console.log("Login was blocked by popup blocker or canceled by user.");
+                      }
+                      // At this point we have to get the user involved, so show the login button
+                      showLoginButton(true, "Login attempt failed: " + reason);
+                  }
+              });
+          }
+
+          function useToken(token) {
+              // Now you have the id token, you can attach it to requests to your service 
+              console.log("Token: " + token);
+              showLoginButton(false);
+              $("#contentDiv").text(token);
+          }
+
+          function showLoginButton(show, message) {
+              $("#loginButton").css({ display: show ? "initial" : "none" });
+              if (message) {
+                  $("#contentDiv").text(message);
+              }
+          }
+
+          function clearCache() {
+              authContext.clearCache();
+          }
+    </script>
+</body>
+</html>
