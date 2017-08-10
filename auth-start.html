@@ -7,28 +7,38 @@
     <script src="adal.js"></script>
     <script src="auth-config.js"></script>
     <script type="text/javascript">
-          microsoftTeams.initialize();
+        microsoftTeams.initialize();
 
-          // Parse query parameters
-          let queryParams = {};
-          location.search.substr(1).split("&").forEach(function(item) {
-              let s = item.split("="),
-              k = s[0],
-              v = s[1] && decodeURIComponent(s[1]);
-              queryParams[k] = v;
-          });
+        // Parse query parameters
+        let queryParams = {};
+        location.search.substr(1).split("&").forEach(function(item) {
+            let s = item.split("="),
+            k = s[0],
+            v = s[1] && decodeURIComponent(s[1]);
+            queryParams[k] = v;
+        });
 
-          let upn = queryParams["upn"];
-          if (upn) {
-              config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(upn);
-          } else {
-              config.extraQueryParameters = "scope=openid+profile";              
-          }
+        let upn = queryParams["upn"];
+        if (upn) {
+            config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(upn);
+        } else {
+            config.extraQueryParameters = "scope=openid+profile";              
+        }
 
-          console.log("extraQueryParameters: " + config.extraQueryParameters);
-          console.log("Starting login flow");
-          let authContext = new AuthenticationContext(config);
-          authContext.login();
+        // Use a custom displayCall function to add extra query parameters to the url before navigating to it
+        config.displayCall = function (urlNavigate) {
+            if (urlNavigate) {
+                if (config.extraQueryParameters) {
+                    urlNavigate += "&" + config.extraQueryParameters;
+                }
+                window.location.replace(urlNavigate);
+            }
+        }
+
+        console.log("extraQueryParameters: " + config.extraQueryParameters);
+        console.log("Starting login flow");
+        let authContext = new AuthenticationContext(config);
+        authContext.login();
     </script>
 </body>
 </html>
